@@ -27,4 +27,3 @@ class TestMainPage(object):
     def test_each_device_displayed(self, name):
         device = self.ui.get_device_by_name(name)
         assert device.is_displayed()
-

@@ -2,7 +2,6 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.common.by import By
 
 
 class WebDriverSetup:
@@ -12,7 +11,7 @@ class WebDriverSetup:
             options.add_argument('start-maximized')
             # options.add_experimental_option('detach', True)
             self.driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-            self.driver.implicitly_wait(10)
+            self.driver.implicitly_wait(implicitly_wait)
         else:
             raise AttributeError(f'Browser {browser} not implemented.')
 
