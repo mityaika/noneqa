@@ -1,9 +1,19 @@
-import locators
+import pom.locators as locators
+from pom import WebDriverSetup
 
 
-class Devices:
-    def __init__(self, driver):
-        self.driver = driver
+class DevicesUI(WebDriverSetup):
+    def __init__(self, browser, url):
+        super().__init__(browser)
+        # self.driver = driver
+        self.url = url
+        self.open_ui()
+
+    def open_ui(self):
+        self.driver.get(self.url)
+
+    def close_ui(self):
+        self.driver.close()
 
     def get_devices_element(self):
         return self.driver.find_element(**locators.MainPage.devices)
