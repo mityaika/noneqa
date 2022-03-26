@@ -13,7 +13,7 @@ class Device:
     id: str = None
 
 
-class Devices(RESTAPI):
+class DevicesAPI(RESTAPI):
 
     def check_alive(self):
         return self.get(self.base_url)
@@ -45,7 +45,7 @@ class Devices(RESTAPI):
 
 
 if __name__ == '__main__':
-    devices_api = Devices(base_url='http://localhost:3000/')
+    devices_api = DevicesAPI(base_url='http://localhost:3000/')
     log.info(devices_api.check_alive().json()['response'])
 
     # list devices
