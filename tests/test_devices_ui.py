@@ -2,9 +2,11 @@ import random
 
 import pytest
 import pandas as pd
+from selenium.common.exceptions import NoSuchElementException
 
 from testdata import device_props
-from api.devices import DevicesAPI
+from api.devices import DevicesAPI, Device
+
 from pom.navigator import DevicesUI
 import config
 import logger
@@ -213,3 +215,39 @@ class TestAddDevice(object):
     def test_new_device_visible(self, add_device_via_ui):
         assert self.ui.get_device_details(self.ui.get_device_by_name(add_device_via_ui['system_name']))['displayed']
 
+
+class TestRenameDevice(object):
+    """
+    Make an API call that renames the first device of the list to “Renamed Device”.
+    Reload the page and verify the modified device has the new name.
+    """
+
+    api = DevicesAPI(base_url=cfg.api_url)
+    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
+
+    @pytest.fixture
+    def rename_the_first_one(self):
+        first_one = self.api.get_devices()[0]
+        name_before = first_one['system_name']
+        name_after = name_before[::-1]
+        self.api.update_device(Device(id=first_one['id'],
+                                      system_name=name_after,
+                                      type=first_one['type'],
+                                      hdd_capacity=first_one['hdd_capacity']
+                                      ))
+        self.ui.driver.refresh()  # reload UI after API call
+
+        return name_before, name_after
+
+    def test_old_name_not_presented(self, rename_the_first_one):
+        name_before, _ = rename_the_first_one
+        log.info(f'Search for the device and make sure it is not displayed: {name_before}')
+
+        with pytest.raises(NoSuchElementException):
+            self.ui.get_device_by_name(name_before).is_displayed()
+
+    def test_new_name_is_presented(self, rename_the_first_one):
+        _, name_after = rename_the_first_one
+        log.info(f'Search for the device and make sure it is displayed: {name_after}')
+
+        assert self.ui.get_device_by_name(name_after).is_displayed()
