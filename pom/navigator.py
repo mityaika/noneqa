@@ -1,4 +1,4 @@
-import selenium.common.exceptions
+from selenium.common.exceptions import NoSuchElementException
 
 import pom.locators as locators
 from pom import WebDriverSetup
@@ -29,22 +29,23 @@ class DevicesUI(WebDriverSetup):
 
     @staticmethod
     def get_device_details(device_element):
-        def safe_find(f):
+        def safe_find(by, value):
             """
             Return None if NoSuchElementException occurs.
-            :param f:
+            :param by:By.ID
+            :param value:str
             :return:
             """
             try:
-                return f
-            except selenium.common.exceptions.NoSuchElementException:
+                return device_element.find_element(by, value)
+            except NoSuchElementException:
                 return None
 
-        _system_name = safe_find(device_element.find_element(**locators.MainPage.device_name))
-        _type = safe_find(device_element.find_element(**locators.MainPage.device_type))
-        _hdd_capacity = safe_find(device_element.find_element(**locators.MainPage.device_capacity))
-        _remove = safe_find(device_element.find_element(**locators.MainPage.device_remove))
-        _edit = safe_find(device_element.find_element(**locators.MainPage.device_edit))
+        _system_name = safe_find(**locators.MainPage.device_name)
+        _type = safe_find(**locators.MainPage.device_type)
+        _hdd_capacity = safe_find(**locators.MainPage.device_capacity)
+        _remove = safe_find(**locators.MainPage.device_remove)
+        _edit = safe_find(**locators.MainPage.device_edit)
         details = {
             'system_name': _system_name.text if _system_name else None,
             'type': _type.text if _type else None,
