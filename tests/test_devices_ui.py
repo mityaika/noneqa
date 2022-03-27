@@ -251,3 +251,29 @@ class TestRenameDevice(object):
         log.info(f'Search for the device and make sure it is displayed: {name_after}')
 
         assert self.ui.get_device_by_name(name_after).is_displayed()
+
+
+class TestDeleteDevice(object):
+    """
+    Make an API call that deletes the last element of the list.
+    Reload the page and verify the element is no longer visible and it doesn’t exist in the DOM.
+    """
+
+    api = DevicesAPI(base_url=cfg.api_url)
+    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
+
+    @pytest.fixture
+    def delete_the_last_one(self):
+        device = self.api.get_devices()[-1]
+        self.api.delete_device(device['id'])
+
+        self.ui.driver.refresh()
+
+        return device
+
+    def test_deleted_one_not_presented_in_ui(self, delete_the_last_one):
+        """
+        Verifies NoSuchElementException raises for the deleted device
+        """
+        with pytest.raises(NoSuchElementException):
+            self.ui.get_device_by_id(delete_the_last_one['id']).is_displayed()
