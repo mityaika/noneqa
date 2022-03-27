@@ -23,7 +23,17 @@ class DevicesAPI(RESTAPI):
 
         return self.get(self.base_url + 'devices').json()
 
-    def get_device(self, device_id: str) -> dict:
+    def get_device_by_name(self, name: str) -> list:
+        """
+        Get the list of devices and returns a list with the ones which match name.
+        It is not clear if system_name is unique system-wide, good guess it is not unique.
+        :param name:
+        :return:
+        """
+        devices = self.get_devices()
+        return [d for d in devices if d['system_name'] == name]
+
+    def get_device_by_id(self, device_id: str) -> dict:
         log.debug(f'Get device by id: {device_id}')
 
         return self.get(self.base_url + 'devices' + f'/{device_id}').json()
@@ -50,7 +60,7 @@ if __name__ == '__main__':
 
     # list devices
     for api_device in devices_api.get_devices():
-        devices_api.get_device(api_device['id'])
+        devices_api.get_device_by_id(api_device['id'])
 
     # add device
     new_device = Device(system_name='pySystem', type='pyType', hdd_capacity='import this')
@@ -60,11 +70,11 @@ if __name__ == '__main__':
     added_device.system_name = 'SUPPA PYTHON'
     devices_api.update_device(added_device)
 
-    _device = devices_api.get_device(added_device.id)
+    _device = devices_api.get_device_by_id(added_device.id)
     log.info(f'Device: {_device}')
 
     r = devices_api.delete_device(added_device.id)
     log.info(f'Delete result: {r}')
 
     for api_device in devices_api.get_devices():
-        devices_api.get_device(api_device['id'])
+        devices_api.get_device_by_id(api_device['id'])
