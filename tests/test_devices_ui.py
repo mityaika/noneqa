@@ -4,7 +4,7 @@ import random
 import pytest
 import pandas as pd
 
-
+from testdata import device_props
 from api.devices import DevicesAPI
 from pom.navigator import DevicesUI
 import config
@@ -49,6 +49,7 @@ class TestDevices(object):
         make sure they are correctly displayed. - not clear criteria what is "correctly displayed".
     Verify that all devices contain the edit and delete buttons.
     """
+
     @classmethod
     def teardown_class(cls):
         # here you should report test results to test case management system for reporting historical purposes.
@@ -125,21 +126,35 @@ class TestAddDevice(object):
     """
     Verify that devices can be created properly using the UI.
     Verify the new device is now visible. Check name, type and capacity are visible and correctly displayed to the user.
+
+    Since system_name is not unique system-wide we may have more than one element with the same name in UI.
+    When a new device created, UI does not return its unique id. One of the ways to intercept http response and get the
+    exact id of the new added device is to run MITM proxy. This can be done with python and Selenium,
+    but will take longer time to implement.
+
     """
+
     api = DevicesAPI(base_url=cfg.api_url)
     ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
 
     @pytest.fixture(scope='class')
-    def add_device_via_ui(self):
-        new_device = {'id': ''.join(random.choices(string.ascii_uppercase +
-                                                   string.ascii_lowercase +
-                                                   string.digits, k=9)),
-                      'system_name': 'L10',
-                      'type': 'new_balance',
-                      'hdd_capacity': '251'
+    def add_device_via_ui(self) -> dict:
+        new_device = {'system_name': random.choice(device_props.first_names).upper() + '-' +
+                                     random.choice(device_props.size_matters).upper() + '-' +
+                                     random.choice(device_props.platforms).upper(),
+                      'device_type': random.choice(device_props.device_types),
+                      'hdd_capacity': str(2 ** random.randint(7, 12))
                       }
 
-        return new_device
+        try:
+            self.ui.add_device(**new_device)
+            log.info(f'Added new device: {new_device}')
+            return new_device
+
+        except Exception as e:
+            log.error(f'Could not add a device via UI: {new_device}')
+            log.exception(e)
+            raise
 
     def test_new_device_api(self, add_device_via_ui):
         """
@@ -147,12 +162,41 @@ class TestAddDevice(object):
         :param add_device_via_ui:
         :return:
         """
-        log.info(add_device_via_ui)
+        expected_device = add_device_via_ui
+        log.info(f'Looking for the device in API: {expected_device}')
+
+        actual_devices = self.api.get_device_by_name(expected_device['system_name'])
+        log.info('Devices found with system name \'{}\':\n {}'.format(expected_device['system_name'], actual_devices))
+
+        # this place is not correct intentionally
+        # take only the first device from UI with matching name.
+        # all others will be ignored.
+        # to do it right way, have to intercept id of the created device in HTTP response
+        actual_device = actual_devices[0]
+        actual_device.pop('id')
+        actual_device['device_type'] = actual_device.pop('type')
+
+        assert actual_device == expected_device
 
     def test_new_device_ui(self, add_device_via_ui):
         """
-        Read the created device from UI
+        Read the created device from UI. The device is searched by name which may cause ambiguous recognition.
         :param add_device_via_ui:
         :return:
         """
-        log.info(add_device_via_ui)
+        expected_device = add_device_via_ui
+        log.info(f'Looking for the device in UI: {expected_device}')
+
+        # reread the list of devices from UI
+        actual_devices = self.ui.get_devices_list()
+        # since we go by name, let's take just the first one. later it is bette to switch to id.
+        actual_device = [d for d in actual_devices if d['system_name'] == expected_device['system_name']][0]
+
+        # drop and rename the keys to match dict structure
+        drop_keys = ['displayed', 'id', 'remove', 'edit']
+        for key in drop_keys:
+            actual_device.pop(key)
+        actual_device['device_type'] = actual_device.pop('type')
+
+
+        assert actual_device == expected_device
