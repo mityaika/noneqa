@@ -156,6 +156,16 @@ class TestAddDevice(object):
             log.exception(e)
             raise
 
+    @classmethod
+    def teardown_class(cls):
+        """
+        Here I should delete the added device via API to return the system to the previous state.
+        :return:
+        """
+        # device_id = %placeholder%
+        # cls.api.delete_device(device_id)
+        pass
+
     def test_new_device_api(self, add_device_via_ui):
         """
         Read the created device from API
@@ -165,13 +175,12 @@ class TestAddDevice(object):
         expected_device = add_device_via_ui
         log.info(f'Looking for the device in API: {expected_device}')
 
-        actual_devices = self.api.get_device_by_name(expected_device['system_name'])
-        log.info('Devices found with system name \'{}\':\n {}'.format(expected_device['system_name'], actual_devices))
-
         # this place is not correct intentionally
         # take only the first device from UI with matching name.
         # all others will be ignored.
         # to do it right way, have to intercept id of the created device in HTTP response
+        actual_devices = self.api.get_device_by_name(expected_device['system_name'])
+        log.info('Devices found with system name \'{}\':\n {}'.format(expected_device['system_name'], actual_devices))
         actual_device = actual_devices[0]
         actual_device.pop('id')
         actual_device['device_type'] = actual_device.pop('type')
@@ -187,10 +196,12 @@ class TestAddDevice(object):
         expected_device = add_device_via_ui
         log.info(f'Looking for the device in UI: {expected_device}')
 
-        # reread the list of devices from UI
-        actual_devices = self.ui.get_devices_list()
-        # since we go by name, let's take just the first one. later it is bette to switch to id.
-        actual_device = [d for d in actual_devices if d['system_name'] == expected_device['system_name']][0]
+        # # reread the list of devices from UI
+        # actual_devices = self.ui.get_devices_list()
+        # # since we go by name, let's take just the first one. later it is bette to switch to id.
+        # actual_device = [d for d in actual_devices if d['system_name'] == expected_device['system_name']][0]
+
+        actual_device = self.ui.get_device_details(self.ui.get_device_by_name(expected_device['system_name']))
 
         # drop and rename the keys to match dict structure
         drop_keys = ['displayed', 'id', 'remove', 'edit']
@@ -198,5 +209,8 @@ class TestAddDevice(object):
             actual_device.pop(key)
         actual_device['device_type'] = actual_device.pop('type')
 
-
         assert actual_device == expected_device
+
+    def test_new_device_visible(self, add_device_via_ui):
+        assert self.ui.get_device_details(self.ui.get_device_by_name(add_device_via_ui['system_name']))['displayed']
+
