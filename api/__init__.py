@@ -46,6 +46,7 @@ class RESTAPI:
         log.debug(f'Status code returned: {response.status_code}')
         session.close()
 
+        # here you can save request execution time to a database to see how requests performance behave in time
         log.debug(f'elapsed time: {self.elapsed_time}')
 
         try:

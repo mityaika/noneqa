@@ -41,6 +41,11 @@ class TestDevices(object):
         make sure they are correctly displayed. - not clear criteria what is "correctly displayed".
     Verify that all devices contain the edit and delete buttons.
     """
+    @classmethod
+    def teardown_class(cls):
+        # here you should report test results to test case management system for reporting historical purposes.
+        pass
+
     api = DevicesAPI(base_url=cfg.api_url)
     expected_devices = api.get_devices()  # get the list of devices returned from API
     log.debug(f'{len(expected_devices)} devices from API')
