@@ -1,5 +1,9 @@
+import string
+import random
+
 import pytest
 import pandas as pd
+
 
 from api.devices import DevicesAPI
 from pom.navigator import DevicesUI
@@ -113,5 +117,38 @@ class TestDevices(object):
         assert result, diff
 
 
+class TestAddDevice(object):
+    """
+    Verify that devices can be created properly using the UI.
+    Verify the new device is now visible. Check name, type and capacity are visible and correctly displayed to the user.
+    """
+    api = DevicesAPI(base_url=cfg.api_url)
+    ui = DevicesUI(browser='Chrome', url=cfg.ui_url)
 
+    @pytest.fixture(scope='class')
+    def add_device_via_ui(self):
+        new_device = {'id': ''.join(random.choices(string.ascii_uppercase +
+                                                   string.ascii_lowercase +
+                                                   string.digits, k=9)),
+                      'system_name': 'L10',
+                      'type': 'new_balance',
+                      'hdd_capacity': '251'
+                      }
 
+        return new_device
+
+    def test_new_device_api(self, add_device_via_ui):
+        """
+        Read the created device from API
+        :param add_device_via_ui:
+        :return:
+        """
+        log.info(add_device_via_ui)
+
+    def test_new_device_ui(self, add_device_via_ui):
+        """
+        Read the created device from UI
+        :param add_device_via_ui:
+        :return:
+        """
+        log.info(add_device_via_ui)
