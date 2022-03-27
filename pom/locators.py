@@ -15,3 +15,7 @@ class MainPage:
         value = f'//span[contains(@class, "device-name") and .//text()="{name}"]'
         return {'by': By.XPATH, 'value': value}
 
+    @staticmethod
+    def find_device_by_id(device_id):
+        value = f'//a[contains(@class, "device-edit") and contains(@href, "{device_id}")]'
+        return {'by': By.XPATH, 'value': value}
