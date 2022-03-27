@@ -13,6 +13,10 @@ import logger
 parser = config.parser
 parser.add_argument('--ui-url', help='URL to client app', env_var='UI_URL')
 parser.add_argument('--api-url', help='URL to server app', env_var='API_URL')
+parser.add_argument('--implicit-wait', type=str, default=10,
+                    help='The web driver to wait for a certain amount of time '
+                         'before it throws a "No Such Element Exception". Default: %(default)s',
+                    env_var='IMP_WAIT')
 
 cfg, _ = parser.parse_known_args()
 
@@ -54,7 +58,7 @@ class TestDevices(object):
     expected_devices = api.get_devices()  # get the list of devices returned from API
     log.debug(f'{len(expected_devices)} devices from API')
 
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url)
+    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=cfg.implicit_wait)
     actual_devices = ui.get_devices_list()  # get the list of devices from UI to compare further
 
     @pytest.mark.parametrize('name', [d['system_name'] for d in expected_devices],
@@ -123,7 +127,7 @@ class TestAddDevice(object):
     Verify the new device is now visible. Check name, type and capacity are visible and correctly displayed to the user.
     """
     api = DevicesAPI(base_url=cfg.api_url)
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url)
+    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
 
     @pytest.fixture(scope='class')
     def add_device_via_ui(self):

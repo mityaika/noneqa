@@ -8,8 +8,8 @@ log = logger.get_logger(__name__, 'INFO')
 
 
 class DevicesUI(WebDriverSetup):
-    def __init__(self, browser, url):
-        super().__init__(browser)
+    def __init__(self, browser: str, url: str, implicit_wait: int = 10):
+        super().__init__(browser, implicit_wait)
         # self.driver = driver
         self.url = url
         self.open_ui()
