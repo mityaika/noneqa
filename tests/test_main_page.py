@@ -1,7 +1,7 @@
 import pytest
 
 from api.devices import DevicesAPI
-from pom.devices import DevicesUI
+from pom.navigator import DevicesUI
 import config
 import logger
 
