@@ -1,4 +1,5 @@
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.support.ui import Select
 
 import pom.locators as locators
 from pom import WebDriverSetup
@@ -56,7 +57,7 @@ class DevicesUI(WebDriverSetup):
             'displayed': device_element.is_displayed()
         }
 
-        log.info(f'Details: {details}')
+        log.debug(f'Details: {details}')
 
         return details
 
@@ -89,3 +90,20 @@ class DevicesUI(WebDriverSetup):
         :return:
         """
         return self.driver.find_element(**locators.MainPage.find_device_by_id(device_id))
+
+    def add_device(self, system_name: str, device_type: str, hdd_capacity: str | int):
+
+        self.driver.find_element(**locators.MainPage.add_device_btn).click()
+
+        system_name_input = self.driver.find_element(**locators.DevicePage.system_name)
+        system_name_input.click()
+        system_name_input.send_keys(system_name)
+
+        device_type_ddl = Select(self.driver.find_element(**locators.DevicePage.type))
+        device_type_ddl.select_by_value(device_type)
+
+        hdd_capacity_input = self.driver.find_element(**locators.DevicePage.hdd_capacity)
+        hdd_capacity_input.click()
+        hdd_capacity_input.send_keys(hdd_capacity)
+
+        self.driver.find_element(**locators.DevicePage.submit_btn).click()
