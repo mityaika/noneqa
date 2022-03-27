@@ -24,6 +24,9 @@ cfg, _ = parser.parse_known_args()
 log = logger.get_logger(__name__, cfg.log_level)
 log.info(cfg)
 
+api = DevicesAPI(base_url=cfg.api_url)
+ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=cfg.implicit_wait)
+
 
 def dataframe_difference(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     """
@@ -56,11 +59,9 @@ class TestDevices(object):
         # here you should report test results to test case management system for reporting historical purposes.
         pass
 
-    api = DevicesAPI(base_url=cfg.api_url)
     expected_devices = api.get_devices()  # get the list of devices returned from API
     log.debug(f'{len(expected_devices)} devices from API')
 
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=cfg.implicit_wait)
     actual_devices = ui.get_devices_list()  # get the list of devices from UI to compare further
 
     @pytest.mark.parametrize('name', [d['system_name'] for d in expected_devices],
@@ -71,7 +72,7 @@ class TestDevices(object):
         :param name:
         :return:
         """
-        device = self.ui.get_device_by_name(name)
+        device = ui.get_device_by_name(name)
         assert device.is_displayed()
 
     @pytest.mark.parametrize('device', actual_devices,
@@ -135,9 +136,6 @@ class TestAddDevice(object):
 
     """
 
-    api = DevicesAPI(base_url=cfg.api_url)
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
-
     @pytest.fixture(scope='class')
     def add_device_via_ui(self) -> dict:
         new_device = {'system_name': random.choice(device_props.first_names).upper() + '-' +
@@ -148,7 +146,7 @@ class TestAddDevice(object):
                       }
 
         try:
-            self.ui.add_device(**new_device)
+            ui.add_device(**new_device)
             log.info(f'Added new device: {new_device}')
             return new_device
 
@@ -180,7 +178,7 @@ class TestAddDevice(object):
         # take only the first device from UI with matching name.
         # all others will be ignored.
         # to do it right way, have to intercept id of the created device in HTTP response
-        actual_devices = self.api.get_device_by_name(expected_device['system_name'])
+        actual_devices = api.get_device_by_name(expected_device['system_name'])
         log.info('Devices found with system name \'{}\':\n {}'.format(expected_device['system_name'], actual_devices))
         actual_device = actual_devices[0]
         actual_device.pop('id')
@@ -202,7 +200,7 @@ class TestAddDevice(object):
         # # since we go by name, let's take just the first one. later it is bette to switch to id.
         # actual_device = [d for d in actual_devices if d['system_name'] == expected_device['system_name']][0]
 
-        actual_device = self.ui.get_device_details(self.ui.get_device_by_name(expected_device['system_name']))
+        actual_device = ui.get_device_details(ui.get_device_by_name(expected_device['system_name']))
 
         # drop and rename the keys to match dict structure
         drop_keys = ['displayed', 'id', 'remove', 'edit']
@@ -213,7 +211,7 @@ class TestAddDevice(object):
         assert actual_device == expected_device
 
     def test_new_device_visible(self, add_device_via_ui):
-        assert self.ui.get_device_details(self.ui.get_device_by_name(add_device_via_ui['system_name']))['displayed']
+        assert ui.get_device_details(ui.get_device_by_name(add_device_via_ui['system_name']))['displayed']
 
 
 class TestRenameDevice(object):
@@ -222,20 +220,17 @@ class TestRenameDevice(object):
     Reload the page and verify the modified device has the new name.
     """
 
-    api = DevicesAPI(base_url=cfg.api_url)
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
-
     @pytest.fixture
     def rename_the_first_one(self):
-        first_one = self.api.get_devices()[0]
+        first_one = api.get_devices()[0]
         name_before = first_one['system_name']
         name_after = name_before[::-1]
-        self.api.update_device(Device(id=first_one['id'],
-                                      system_name=name_after,
-                                      type=first_one['type'],
-                                      hdd_capacity=first_one['hdd_capacity']
-                                      ))
-        self.ui.driver.refresh()  # reload UI after API call
+        api.update_device(Device(id=first_one['id'],
+                                 system_name=name_after,
+                                 type=first_one['type'],
+                                 hdd_capacity=first_one['hdd_capacity']
+                                 ))
+        ui.driver.refresh()  # reload UI after API call
 
         return name_before, name_after
 
@@ -244,13 +239,13 @@ class TestRenameDevice(object):
         log.info(f'Search for the device and make sure it is not displayed: {name_before}')
 
         with pytest.raises(NoSuchElementException):
-            self.ui.get_device_by_name(name_before).is_displayed()
+            ui.get_device_by_name(name_before).is_displayed()
 
     def test_new_name_is_presented(self, rename_the_first_one):
         _, name_after = rename_the_first_one
         log.info(f'Search for the device and make sure it is displayed: {name_after}')
 
-        assert self.ui.get_device_by_name(name_after).is_displayed()
+        assert ui.get_device_by_name(name_after).is_displayed()
 
 
 class TestDeleteDevice(object):
@@ -259,15 +254,12 @@ class TestDeleteDevice(object):
     Reload the page and verify the element is no longer visible and it doesn’t exist in the DOM.
     """
 
-    api = DevicesAPI(base_url=cfg.api_url)
-    ui = DevicesUI(browser='Chrome', url=cfg.ui_url, implicit_wait=1)
-
     @pytest.fixture
     def delete_the_last_one(self):
-        device = self.api.get_devices()[-1]
-        self.api.delete_device(device['id'])
+        device = api.get_devices()[-1]
+        api.delete_device(device['id'])
 
-        self.ui.driver.refresh()
+        ui.driver.refresh()
 
         return device
 
@@ -276,4 +268,4 @@ class TestDeleteDevice(object):
         Verifies NoSuchElementException raises for the deleted device
         """
         with pytest.raises(NoSuchElementException):
-            self.ui.get_device_by_id(delete_the_last_one['id']).is_displayed()
+            ui.get_device_by_id(delete_the_last_one['id']).is_displayed()
