@@ -1,4 +1,3 @@
-from operator import itemgetter
 import pytest
 import pandas as pd
 
@@ -20,6 +19,7 @@ log.info(cfg)
 def dataframe_difference(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
     """
     Find rows which are different between two DataFrames.
+
     :param df1: first dataframe.
     :param df2: second dataframe.
     :return:    if there is different between both dataframes.

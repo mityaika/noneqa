@@ -1,6 +1,5 @@
 import selenium.common.exceptions
 
-
 import pom.locators as locators
 from pom import WebDriverSetup
 import logger
@@ -63,7 +62,7 @@ class DevicesUI(WebDriverSetup):
     def get_devices_list(self) -> list:
         """
         Returns list of device dictionaries
-        :return: python list of dictionaries with eacf device details resolved from UI
+        :return: python list of dictionaries with each device details resolved from UI
         """
         device_elements = self.driver.find_elements(**locators.MainPage.device)  # find all tags with device
         devices = list()
@@ -73,7 +72,7 @@ class DevicesUI(WebDriverSetup):
 
         return devices
 
-    def get_device_by_name(self, name:str):
+    def get_device_by_name(self, name: str):
         """
         Returns UI element by name found by XPath.
         :param name:
@@ -81,9 +80,10 @@ class DevicesUI(WebDriverSetup):
         """
         return self.driver.find_element(**locators.MainPage.find_device_by_name(name))
 
-    def get_device_by_id(self, device_id:str):
+    def get_device_by_id(self, device_id: str):
         """
         Returns UI element by id found by XPath.
+
         :param device_id:
         :return:
         """
