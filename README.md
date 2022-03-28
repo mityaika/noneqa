@@ -37,4 +37,4 @@ Results are output to console and html report created in testresults folder.
 
 ## Known Issues
 1. "System name" device property is not unique per system and can cause ambiguous recognition. One of possible solutions is to setup MITM proxy and intercept HTTP response to parse out id of the created device.
-2. "System type" for existing devices can be "WINDOWS_WORKSTATION" or "WINDOWS WORKSTATION'. This needs to be treated in the test validating devices.
+2. "System type" can be "WINDOWS_WORKSTATION" or "WINDOWS WORKSTATION'. This is because of type: "WINDOWS WORKSTATION" in src/views/AddDevice.js
