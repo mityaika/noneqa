@@ -34,3 +34,7 @@ Results are output to console and html report created in testresults folder.
 1. The framwework has extensive configuration options where config option can be provided via command-line, config files, environment variables. Default configuration is in config/default.config file.
 2. The framework separates API, UI operations and locators, tests, test data and testresults.
 3. The framework has built-in functionality to measure elapsed time for API requests which can be used for further performance analysis.
+
+## Known Issues
+1. "System name" device property is not unique per system and can cause ambiguous recognition. One of possible solutions is to setup MITM proxy and intercept HTTP response to parse out id of the created device.
+2. "System type" for existing devices can be "WINDOWS_WORKSTATION" or "WINDOWS WORKSTATION'. This needs to be treated in the test validating devices.
